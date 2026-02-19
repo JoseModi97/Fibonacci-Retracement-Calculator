@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retracement Calculator</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .window {
+            background: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            width: 100%;
+            max-width: 480px;
+            overflow: hidden;
+        }
+
+        .title-bar {
+            background: #ffffff;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .title-bar-text {
+            font-size: 13px;
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .title-bar-icon {
+            width: 16px;
+            height: 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 3px;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .window-control {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .window-control:hover {
+            opacity: 0.8;
+        }
+
+        .control-minimize {
+            background: #ffbd44;
+        }
+
+        .control-maximize {
+            background: #00ca56;
+        }
+
+        .control-close {
+            background: #ff605c;
+        }
+
+        .content {
+            padding: 24px;
+        }
+
+        .app-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .app-subtitle {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: 14px;
+            border: 1px solid #d1d1d1;
+            border-radius: 6px;
+            background: #ffffff;
+            color: #1a1a1a;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        }
+
+        .form-input::placeholder {
+            color: #999;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 11px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .results {
+            margin-top: 24px;
+            padding: 20px;
+            background: #ffffff;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .results-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            font-size: 14px;
+        }
+
+        .result-label {
+            color: #666;
+        }
+
+        .result-value {
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .result-value.highlight {
+            color: #667eea;
+            font-size: 16px;
+        }
+
+        .formula-box {
+            margin-top: 16px;
+            padding: 14px;
+            background: #f5f5f5;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 12px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .formula-box .formula-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #667eea;
+        }
+
+        .error-message {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c00;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-top: 16px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .preset-levels {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .preset-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            border: 1px solid #d1d1d1;
+            border-radius: 4px;
+            background: #ffffff;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preset-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .preset-btn.active {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="window">
+        <div class="title-bar">
+            <div class="title-bar-text">
+                <div class="title-bar-icon"></div>
+                Retracement Calculator
+            </div>
+            <div class="window-controls">
+                <button class="window-control control-minimize" title="Minimize"></button>
+                <button class="window-control control-maximize" title="Maximize"></button>
+                <button class="window-control control-close" title="Close"></button>
+            </div>
+        </div>
+        <div class="content">
+            <h1 class="app-title">Retracement Calculator</h1>
+            <p class="app-subtitle">Calculate Fibonacci retracement levels</p>
+
+            <div class="form-group">
+                <label class="form-label" for="pivotHigh">Pivot High</label>
+                <input type="number" class="form-input" id="pivotHigh" placeholder="e.g., 6162.25" step="0.01">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="pivotLow">Pivot Low</label>
+                <input type="number" class="form-input" id="pivotLow" placeholder="e.g., 5809.00" step="0.01">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="retracementLevel">Retracement Level (%)</label>
+                <input type="number" class="form-input" id="retracementLevel" placeholder="e.g., 61.8" step="0.1">
+                <div class="preset-levels">
+                    <button class="preset-btn" data-level="23.6">23.6%</button>
+                    <button class="preset-btn" data-level="38.2">38.2%</button>
+                    <button class="preset-btn" data-level="50.0">50.0%</button>
+                    <button class="preset-btn" data-level="61.8">61.8%</button>
+                    <button class="preset-btn" data-level="78.6">78.6%</button>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="calculateBtn">Calculate</button>
+
+            <div class="error-message" id="errorMessage"></div>
+
+            <div class="results" id="results">
+                <div class="results-title">Calculation Results</div>
+                <div class="result-item">
+                    <span class="result-label">Pivot High:</span>
+                    <span class="result-value" id="resultPivotHigh"></span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Pivot Low:</span>
+                    <span class="result-value" id="resultPivotLow"></span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Price Range:</span>
+                    <span class="result-value" id="resultPriceRange"></span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Retracement Level:</span>
+                    <span class="result-value" id="resultRetracementLevel"></span>
+                </div>
+                <div class="result-item" style="border-top: 1px solid #e5e5e5; margin-top: 8px; padding-top: 12px;">
+                    <span class="result-label">Retracement Price:</span>
+                    <span class="result-value highlight" id="resultRetracementPrice"></span>
+                </div>
+                <div class="formula-box">
+                    <div class="formula-title">Formula Applied:</div>
+                    <div id="formulaDetails"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Preset level buttons
+            $('.preset-btn').on('click', function() {
+                $('.preset-btn').removeClass('active');
+                $(this).addClass('active');
+                const level = $(this).data('level');
+                $('#retracementLevel').val(level);
+            });
+
+            // Calculate button
+            $('#calculateBtn').on('click', function() {
+                calculateRetracement();
+            });
+
+            // Enter key to calculate
+            $('.form-input').on('keypress', function(e) {
+                if (e.which === 13) {
+                    calculateRetracement();
+                }
+            });
+
+            function calculateRetracement() {
+                // Hide previous results and errors
+                $('#results').removeClass('show');
+                $('#errorMessage').removeClass('show');
+
+                // Get input values
+                const pivotHigh = parseFloat($('#pivotHigh').val());
+                const pivotLow = parseFloat($('#pivotLow').val());
+                const retracementPercent = parseFloat($('#retracementLevel').val());
+
+                // Validation
+                if (isNaN(pivotHigh) || isNaN(pivotLow) || isNaN(retracementPercent)) {
+                    showError('Please enter valid numbers for all fields.');
+                    return;
+                }
+
+                if (pivotHigh <= pivotLow) {
+                    showError('Pivot High must be greater than Pivot Low.');
+                    return;
+                }
+
+                if (retracementPercent < 0 || retracementPercent > 100) {
+                    showError('Retracement level must be between 0 and 100.');
+                    return;
+                }
+
+                // Calculations
+                const priceRange = pivotHigh - pivotLow;
+                const retracementDecimal = retracementPercent / 100;
+                const retracementPrice = pivotHigh - (retracementDecimal * priceRange);
+
+                // Display results
+                $('#resultPivotHigh').text(formatNumber(pivotHigh));
+                $('#resultPivotLow').text(formatNumber(pivotLow));
+                $('#resultPriceRange').text(formatNumber(priceRange));
+                $('#resultRetracementLevel').text(retracementPercent.toFixed(1) + '%');
+                $('#resultRetracementPrice').text(formatNumber(retracementPrice));
+
+                // Formula details
+                const formulaHtml = `
+                    Price Range = ${formatNumber(pivotHigh)} - ${formatNumber(pivotLow)} = ${formatNumber(priceRange)}<br>
+                    Retracement = ${formatNumber(pivotHigh)} - (${retracementDecimal} × ${formatNumber(priceRange)})<br>
+                    Retracement = ${formatNumber(pivotHigh)} - ${formatNumber(retracementDecimal * priceRange)} = <strong>${formatNumber(retracementPrice)}</strong>
+                `;
+                $('#formulaDetails').html(formulaHtml);
+
+                // Show results with animation
+                $('#results').addClass('show');
+            }
+
+            function showError(message) {
+                $('#errorMessage').text(message).addClass('show');
+            }
+
+            function formatNumber(num) {
+                if (num % 1 === 0) {
+                    return num.toLocaleString();
+                }
+                return num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+        });
+    </script>
+</body>
+</html>
